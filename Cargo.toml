@@ -1,0 +1,17 @@
+[package]
+name = "authorized_client"
+version = "0.1.0"
+authors = ["Jeroen Vervaeke <jeroenvervaeke@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+log = "0.4"
+oauth2 = "4.0.0-beta.1"
+reqwest = { version = "0.11.2", features = [ "json" ] }
+serde = { version = "1.0", features = [ "derive" ] }
+serde_json = "1.0"
+tokio = { version = "1", default-features = false, features = [ "sync" ] }
+url = { version = "2", features = [ "serde" ] }
