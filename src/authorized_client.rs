@@ -23,6 +23,10 @@ pub struct AuthorizedClient {
 const MAX_RETRY_COUNT: u8 = 3;
 
 impl AuthorizedClient {
+    /// Create a new `AuthorizedClient`
+    ///
+    /// This function immediately tries to get a bearer token from the auth server.
+    /// When this fails your `settings` are probably incorrect
     pub async fn connect(settings: Settings) -> Result<Self> {
         // Create the underlying http client, will be reused for every call
         let http_client = Client::new();
@@ -42,6 +46,7 @@ impl AuthorizedClient {
         })
     }
 
+    // Internal method used to get a new bearer token from the auth server
     async fn get_bearer_token(settings: &Settings) -> Result<Credentials> {
         trace!("Preparing client credentials exchange");
         // Create a new oauth "client"
@@ -85,6 +90,9 @@ impl AuthorizedClient {
         })
     }
 
+    /// Make a get request to the endpoint.
+    ///
+    /// See: [request_json](AuthorizedClient::request_json) for more info
     pub async fn get<R>(&self, url: Url) -> Result<R>
     where
         R: for<'de> Deserialize<'de>,
@@ -93,6 +101,7 @@ impl AuthorizedClient {
             .await
     }
 
+    // Check if the bearer token isn't expired yet, if so get a new one
     async fn ensure_authenticated(&self) -> Result<()> {
         // Verify that the credentials are not expired yet
         // read lock: This will block until the write lock (if present) is released
@@ -112,12 +121,14 @@ impl AuthorizedClient {
         Ok(())
     }
 
+    // Get a new bearer token even if our internal code says it's still valid (might be invalidated on the server side)
     async fn force_refresh_authentication(&self) -> Result<()> {
         trace!("Force refreshing bearer token");
         let write_lock = self.credentials.write().await;
         self.refresh_authentication(write_lock).await
     }
 
+    // Get a new bearer token and update save it
     async fn refresh_authentication(
         &self,
         mut write_lock: RwLockWriteGuard<'_, Credentials>,
@@ -132,7 +143,13 @@ impl AuthorizedClient {
         Ok(())
     }
 
-    async fn request_json<R>(&self, request_builder: impl Fn() -> Request) -> Result<R>
+    /// Make a request to the endpoint.
+    ///
+    /// A bearer token will automatically be included.
+    /// In case the bearer token gets rejected a new one is requested, this retry mechanism works 3 times, after that the client returns an error.
+    ///
+    /// Note: only status code  `200` returns `Ok`, the rest returns an `Err`
+    pub async fn request_json<R>(&self, request_builder: impl Fn() -> Request) -> Result<R>
     where
         R: for<'de> Deserialize<'de>,
     {
