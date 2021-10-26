@@ -8,7 +8,7 @@
 //! Add this library as a dependency to your project.
 //! ```toml
 //! [dependencies]
-//! authorized_client = { git = "ssh://git@github.com/jeroenvervaeke/authorized_client.git" }
+//! authorized_client = { git = "https://github.com/jeroenvervaeke/authorized_client.git" }
 //! ```
 //!
 //! ## Example code
@@ -32,6 +32,7 @@
 //! // If this fails your settings are probably wrong.
 //! let client = AuthorizedClient::connect(settings).await?;
 //!
+//! // Call your desired endpoints
 //! let repsonse: MyResponse = client.get(Url::parse("https://protected-endpoint.com/info")?).await?;
 //!
 //!# Ok(())

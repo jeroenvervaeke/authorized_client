@@ -10,7 +10,7 @@ For now this library only supports endpoints which return `json` bodies.
 Add this library as a dependency to your project.
 ```toml
 [dependencies]
-authorized_client = { git = "ssh://git@github.com/jeroenvervaeke/authorized_client.git" }
+authorized_client = { git = "https://github.com/jeroenvervaeke/authorized_client.git" }
 ```
 
 ## Example code
