@@ -1,5 +1,6 @@
 # Authorized Client
 [![Build Status][build-img]][build-url]
+[![Documentation][docs-img]][docs-url]
 ## About
 The goal of this library is to make extremely easy to use rest endpoints which are protected by oauth 2.0 client credentials authorization.
 The client is based on the `Reqwest` and `Oauth2` library
@@ -36,3 +37,6 @@ let repsonse: MyResponse = client.get(Url::parse("https://protected-endpoint.com
 
 [build-img]: https://github.com/jeroenvervaeke/authorized_client/actions/workflows/rust.yml/badge.svg?branch=master
 [build-url]: https://github.com/jeroenvervaeke/authorized_client/actions/workflows/rust.yml
+[docs-img]: https://img.shields.io/badge/Docs-up%20to%20date-success
+[docs-url]: https://jeroenvervaeke.github.io/authorized_client/authorized_client/index.html
+
