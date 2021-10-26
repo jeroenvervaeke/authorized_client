@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["authorized_client"];
