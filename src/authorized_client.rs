@@ -1,4 +1,4 @@
-use crate::settings::AuthorizedClientSettings;
+use crate::settings::Settings;
 use anyhow::{bail, Context, Result};
 use log::{debug, trace};
 use oauth2::basic::BasicClient;
@@ -17,13 +17,13 @@ use url::Url;
 pub struct AuthorizedClient {
     credentials: Arc<RwLock<Credentials>>,
     http_client: Client,
-    settings: AuthorizedClientSettings,
+    settings: Settings,
 }
 
 const MAX_RETRY_COUNT: u8 = 3;
 
 impl AuthorizedClient {
-    pub async fn connect(settings: AuthorizedClientSettings) -> Result<Self> {
+    pub async fn connect(settings: Settings) -> Result<Self> {
         // Create the underlying http client, will be reused for every call
         let http_client = Client::new();
 
@@ -42,7 +42,7 @@ impl AuthorizedClient {
         })
     }
 
-    async fn get_bearer_token(settings: &AuthorizedClientSettings) -> Result<Credentials> {
+    async fn get_bearer_token(settings: &Settings) -> Result<Credentials> {
         trace!("Preparing client credentials exchange");
         // Create a new oauth "client"
         let oauth_client = BasicClient::new(
