@@ -215,6 +215,30 @@
 <span id="215">215</span>
 <span id="216">216</span>
 <span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::settings::Settings</span>;
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">debug</span>, <span class="ident">trace</span>};
@@ -222,8 +246,10 @@
 <span class="kw">use</span> <span class="ident">oauth2::http::StatusCode</span>;
 <span class="kw">use</span> <span class="ident">oauth2::reqwest::async_http_client</span>;
 <span class="kw">use</span> <span class="ident">oauth2</span>::{<span class="ident">AuthUrl</span>, <span class="ident">ClientId</span>, <span class="ident">ClientSecret</span>, <span class="ident">Scope</span>, <span class="ident">TokenResponse</span>, <span class="ident">TokenUrl</span>};
-<span class="kw">use</span> <span class="ident">reqwest</span>::{<span class="ident">Client</span>, <span class="ident">Method</span>, <span class="ident">Request</span>};
+<span class="kw">use</span> <span class="ident">reqwest</span>::{<span class="ident">Client</span>, <span class="ident">Method</span>, <span class="ident">Request</span>, <span class="ident">Response</span>};
 <span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
+<span class="kw">use</span> <span class="ident">std::error::Error</span>;
+<span class="kw">use</span> <span class="ident">std::future::Future</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 <span class="kw">use</span> <span class="ident">std::time::Instant</span>;
 <span class="kw">use</span> <span class="ident">tokio::sync</span>::{<span class="ident">RwLock</span>, <span class="ident">RwLockWriteGuard</span>};
@@ -308,6 +334,7 @@
     }
 
     <span class="doccomment">/// Make a get request to the endpoint.</span>
+    <span class="doccomment">/// Expects the response to be a json object</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// See: [request_json](AuthorizedClient::request_json) for more info</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">url</span>: <span class="ident">Url</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
@@ -315,6 +342,15 @@
         <span class="ident">R</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="self">self</span>.<span class="ident">request_json</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Request::new</span>(<span class="ident">Method::GET</span>, <span class="ident">url</span>.<span class="ident">clone</span>()))
+            .<span class="kw">await</span>
+    }
+
+    <span class="doccomment">/// Make a get request to the endpoint.</span>
+    <span class="doccomment">/// Get the response as plain text</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See: [request_json](AuthorizedClient::request_json) for more info</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_plain_text</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">url</span>: <span class="ident">Url</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">request</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Request::new</span>(<span class="ident">Method::GET</span>, <span class="ident">url</span>.<span class="ident">clone</span>()), <span class="ident">Response::text</span>)
             .<span class="kw">await</span>
     }
 
@@ -370,6 +406,18 @@
     <span class="kw">where</span>
         <span class="ident">R</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
+        <span class="self">self</span>.<span class="ident">request</span>(<span class="ident">request_builder</span>, <span class="ident">Response::json</span>).<span class="kw">await</span>
+    }
+
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">request</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">ExtractFut</span>, <span class="ident">ExtractError</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">request_builder</span>: <span class="kw">impl</span> <span class="ident">Fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Request</span>,
+        <span class="ident">response_builder</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>(<span class="ident">Response</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ExtractFut</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">ExtractFut</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">ExtractError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">ExtractError</span>: <span class="ident">Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    {
         <span class="comment">// Ensure we don&#39;t attempt to make a request with an expired access token</span>
         <span class="self">self</span>.<span class="ident">ensure_authenticated</span>().<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -395,7 +443,7 @@
             <span class="comment">// When the server returns 401: refresh authentication and retry</span>
             <span class="comment">// In other cases, throw an error</span>
             <span class="kw">match</span> <span class="ident">response</span>.<span class="ident">status</span>() {
-                <span class="ident">StatusCode::OK</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">response</span>.<span class="ident">json</span>().<span class="kw">await</span><span class="question-mark">?</span>),
+                <span class="ident">StatusCode::OK</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">response_builder</span>(<span class="ident">response</span>).<span class="kw">await</span><span class="question-mark">?</span>),
                 <span class="ident">StatusCode::UNAUTHORIZED</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="comment">// When we reached the maximum amount of retries: bail</span>
                     <span class="kw">if</span> <span class="ident">unauthorized_retries</span> <span class="op">=</span><span class="op">=</span> <span class="ident">MAX_RETRY_COUNT</span> {
