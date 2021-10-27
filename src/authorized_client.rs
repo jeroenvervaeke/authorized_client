@@ -5,8 +5,10 @@ use oauth2::basic::BasicClient;
 use oauth2::http::StatusCode;
 use oauth2::reqwest::async_http_client;
 use oauth2::{AuthUrl, ClientId, ClientSecret, Scope, TokenResponse, TokenUrl};
-use reqwest::{Client, Method, Request};
+use reqwest::{Client, Method, Request, Response};
 use serde::Deserialize;
+use std::error::Error;
+use std::future::Future;
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::{RwLock, RwLockWriteGuard};
@@ -91,6 +93,7 @@ impl AuthorizedClient {
     }
 
     /// Make a get request to the endpoint.
+    /// Expects the response to be a json object
     ///
     /// See: [request_json](AuthorizedClient::request_json) for more info
     pub async fn get<R>(&self, url: Url) -> Result<R>
@@ -98,6 +101,15 @@ impl AuthorizedClient {
         R: for<'de> Deserialize<'de>,
     {
         self.request_json(|| Request::new(Method::GET, url.clone()))
+            .await
+    }
+
+    /// Make a get request to the endpoint.
+    /// Get the response as plain text
+    ///
+    /// See: [request_json](AuthorizedClient::request_json) for more info
+    pub async fn get_plain_text(&self, url: Url) -> Result<String> {
+        self.request(|| Request::new(Method::GET, url.clone()), Response::text)
             .await
     }
 
@@ -153,6 +165,18 @@ impl AuthorizedClient {
     where
         R: for<'de> Deserialize<'de>,
     {
+        self.request(request_builder, Response::json).await
+    }
+
+    async fn request<R, ExtractFut, ExtractError>(
+        &self,
+        request_builder: impl Fn() -> Request,
+        response_builder: impl FnOnce(Response) -> ExtractFut,
+    ) -> Result<R>
+    where
+        ExtractFut: Future<Output = Result<R, ExtractError>>,
+        ExtractError: Error + Send + Sync + 'static,
+    {
         // Ensure we don't attempt to make a request with an expired access token
         self.ensure_authenticated().await?;
 
@@ -178,7 +202,7 @@ impl AuthorizedClient {
             // When the server returns 401: refresh authentication and retry
             // In other cases, throw an error
             match response.status() {
-                StatusCode::OK => return Ok(response.json().await?),
+                StatusCode::OK => return Ok(response_builder(response).await?),
                 StatusCode::UNAUTHORIZED => {
                     // When we reached the maximum amount of retries: bail
                     if unauthorized_retries == MAX_RETRY_COUNT {
