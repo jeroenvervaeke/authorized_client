@@ -239,6 +239,62 @@
 <span id="239">239</span>
 <span id="240">240</span>
 <span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::settings::Settings</span>;
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">debug</span>, <span class="ident">trace</span>};
@@ -247,7 +303,7 @@
 <span class="kw">use</span> <span class="ident">oauth2::reqwest::async_http_client</span>;
 <span class="kw">use</span> <span class="ident">oauth2</span>::{<span class="ident">AuthUrl</span>, <span class="ident">ClientId</span>, <span class="ident">ClientSecret</span>, <span class="ident">Scope</span>, <span class="ident">TokenResponse</span>, <span class="ident">TokenUrl</span>};
 <span class="kw">use</span> <span class="ident">reqwest</span>::{<span class="ident">Client</span>, <span class="ident">Method</span>, <span class="ident">Request</span>, <span class="ident">Response</span>};
-<span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">std::error::Error</span>;
 <span class="kw">use</span> <span class="ident">std::future::Future</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
@@ -255,6 +311,7 @@
 <span class="kw">use</span> <span class="ident">tokio::sync</span>::{<span class="ident">RwLock</span>, <span class="ident">RwLockWriteGuard</span>};
 <span class="kw">use</span> <span class="ident">tokio::time</span>::{<span class="ident">sleep</span>, <span class="ident">Duration</span>};
 <span class="kw">use</span> <span class="ident">url::Url</span>;
+<span class="kw">use</span> <span class="ident">void::Void</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AuthorizedClient</span> {
@@ -336,21 +393,64 @@
     <span class="doccomment">/// Make a get request to the endpoint.</span>
     <span class="doccomment">/// Expects the response to be a json object</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// See: [request_json](AuthorizedClient::request_json) for more info</span>
+    <span class="doccomment">/// See: [request](AuthorizedClient::request) for more info</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">url</span>: <span class="ident">Url</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">R</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
-        <span class="self">self</span>.<span class="ident">request_json</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Request::new</span>(<span class="ident">Method::GET</span>, <span class="ident">url</span>.<span class="ident">clone</span>()))
-            .<span class="kw">await</span>
+        <span class="self">self</span>.<span class="ident">request</span>(
+            <span class="op">|</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::new</span>(<span class="ident">Method::GET</span>, <span class="ident">url</span>.<span class="ident">clone</span>())),
+            <span class="ident">Response::json</span>,
+        )
+        .<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Make a get request to the endpoint.</span>
     <span class="doccomment">/// Get the response as plain text</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// See: [request_json](AuthorizedClient::request_json) for more info</span>
+    <span class="doccomment">/// See: [request](AuthorizedClient::request) for more info</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_plain_text</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">url</span>: <span class="ident">Url</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">request</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Request::new</span>(<span class="ident">Method::GET</span>, <span class="ident">url</span>.<span class="ident">clone</span>()), <span class="ident">Response::text</span>)
+        <span class="self">self</span>.<span class="ident">request</span>(
+            <span class="op">|</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">Request::new</span>(<span class="ident">Method::GET</span>, <span class="ident">url</span>.<span class="ident">clone</span>())),
+            <span class="ident">Response::text</span>,
+        )
+        .<span class="kw">await</span>
+    }
+
+    <span class="doccomment">/// Make a post request to the endpoint.</span>
+    <span class="doccomment">/// Expects the response to be a json object</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See: [request](AuthorizedClient::request) for more info</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">post</span><span class="op">&lt;</span><span class="ident">B</span>, <span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">url</span>: <span class="ident">Url</span>, <span class="ident">body</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">B</span>: <span class="ident">Serialize</span>,
+        <span class="ident">R</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
+    {
+        <span class="self">self</span>.<span class="ident">request</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">build_post_request</span>(<span class="kw-2">&amp;</span><span class="ident">url</span>, <span class="ident">body</span>), <span class="ident">Response::json</span>)
+            .<span class="kw">await</span>
+    }
+
+    <span class="doccomment">/// Make a post request to the endpoint.</span>
+    <span class="doccomment">/// Get the response as plain text</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See: [request](AuthorizedClient::request) for more info</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">post_plain_text</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">url</span>: <span class="ident">Url</span>, <span class="ident">body</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">B</span>: <span class="ident">Serialize</span>,
+    {
+        <span class="self">self</span>.<span class="ident">request</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">build_post_request</span>(<span class="kw-2">&amp;</span><span class="ident">url</span>, <span class="ident">body</span>), <span class="ident">Response::text</span>)
+            .<span class="kw">await</span>
+    }
+
+    <span class="doccomment">/// Make a post request to the endpoint.</span>
+    <span class="doccomment">/// Ignore the response</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See: [request](AuthorizedClient::request) for more info</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">post_ignore_response</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">url</span>: <span class="ident">Url</span>, <span class="ident">body</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">B</span>: <span class="ident">Serialize</span>,
+    {
+        <span class="self">self</span>.<span class="ident">request</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">build_post_request</span>(<span class="kw-2">&amp;</span><span class="ident">url</span>, <span class="ident">body</span>), <span class="ident">ignore_response</span>)
             .<span class="kw">await</span>
     }
 
@@ -402,16 +502,9 @@
     <span class="doccomment">/// In case the bearer token gets rejected a new one is requested, this retry mechanism works 3 times, after that the client returns an error.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Note: only status code  `200` returns `Ok`, the rest returns an `Err`</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">request_json</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">request_builder</span>: <span class="kw">impl</span> <span class="ident">Fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Request</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="kw">for</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
-    {
-        <span class="self">self</span>.<span class="ident">request</span>(<span class="ident">request_builder</span>, <span class="ident">Response::json</span>).<span class="kw">await</span>
-    }
-
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">request</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">ExtractFut</span>, <span class="ident">ExtractError</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">request</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">ExtractFut</span>, <span class="ident">ExtractError</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">request_builder</span>: <span class="kw">impl</span> <span class="ident">Fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Request</span>,
+        <span class="ident">request_builder</span>: <span class="kw">impl</span> <span class="ident">Fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Request</span><span class="op">&gt;</span>,
         <span class="ident">response_builder</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>(<span class="ident">Response</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ExtractFut</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
     <span class="kw">where</span>
@@ -427,7 +520,7 @@
 
         <span class="kw">loop</span> {
             <span class="comment">// Build the request</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">request_builder</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">request_builder</span>()<span class="question-mark">?</span>;
 
             <span class="comment">// Add the bearer token to the request headers</span>
             <span class="kw">let</span> <span class="ident">headers</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">headers_mut</span>();
@@ -473,6 +566,25 @@
             }
         }
     }
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build_post_request</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(<span class="ident">url</span>: <span class="kw-2">&amp;</span><span class="ident">Url</span>, <span class="ident">body</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Request</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">B</span>: <span class="ident">Serialize</span>,
+{
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">Request::new</span>(<span class="ident">Method::POST</span>, <span class="ident">url</span>.<span class="ident">clone</span>());
+    <span class="kw">let</span> <span class="ident">request_body</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">body_mut</span>();
+    <span class="kw-2">*</span><span class="ident">request_body</span> <span class="op">=</span> <span class="prelude-val">Some</span>(
+        <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">body</span>)
+            .<span class="ident">context</span>(<span class="string">&quot;Failed to serialize body&quot;</span>)<span class="question-mark">?</span>
+            .<span class="ident">into</span>(),
+    );
+
+    <span class="prelude-val">Ok</span>(<span class="ident">request</span>)
+}
+
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">ignore_response</span>(<span class="kw">_</span>: <span class="ident">Response</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Void</span><span class="op">&gt;</span> {
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
