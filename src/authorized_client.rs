@@ -6,7 +6,7 @@ use oauth2::http::StatusCode;
 use oauth2::reqwest::async_http_client;
 use oauth2::{AuthUrl, ClientId, ClientSecret, Scope, TokenResponse, TokenUrl};
 use reqwest::{Client, Method, Request, Response};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::future::Future;
 use std::sync::Arc;
@@ -14,6 +14,7 @@ use std::time::Instant;
 use tokio::sync::{RwLock, RwLockWriteGuard};
 use tokio::time::{sleep, Duration};
 use url::Url;
+use void::Void;
 
 #[derive(Clone)]
 pub struct AuthorizedClient {
@@ -95,21 +96,64 @@ impl AuthorizedClient {
     /// Make a get request to the endpoint.
     /// Expects the response to be a json object
     ///
-    /// See: [request_json](AuthorizedClient::request_json) for more info
+    /// See: [request](AuthorizedClient::request) for more info
     pub async fn get<R>(&self, url: Url) -> Result<R>
     where
         R: for<'de> Deserialize<'de>,
     {
-        self.request_json(|| Request::new(Method::GET, url.clone()))
-            .await
+        self.request(
+            || Ok(Request::new(Method::GET, url.clone())),
+            Response::json,
+        )
+        .await
     }
 
     /// Make a get request to the endpoint.
     /// Get the response as plain text
     ///
-    /// See: [request_json](AuthorizedClient::request_json) for more info
+    /// See: [request](AuthorizedClient::request) for more info
     pub async fn get_plain_text(&self, url: Url) -> Result<String> {
-        self.request(|| Request::new(Method::GET, url.clone()), Response::text)
+        self.request(
+            || Ok(Request::new(Method::GET, url.clone())),
+            Response::text,
+        )
+        .await
+    }
+
+    /// Make a post request to the endpoint.
+    /// Expects the response to be a json object
+    ///
+    /// See: [request](AuthorizedClient::request) for more info
+    pub async fn post<B, R>(&self, url: Url, body: &B) -> Result<R>
+    where
+        B: Serialize,
+        R: for<'de> Deserialize<'de>,
+    {
+        self.request(|| build_post_request(&url, body), Response::json)
+            .await
+    }
+
+    /// Make a post request to the endpoint.
+    /// Get the response as plain text
+    ///
+    /// See: [request](AuthorizedClient::request) for more info
+    pub async fn post_plain_text<B>(&self, url: Url, body: &B) -> Result<String>
+    where
+        B: Serialize,
+    {
+        self.request(|| build_post_request(&url, body), Response::text)
+            .await
+    }
+
+    /// Make a post request to the endpoint.
+    /// Ignore the response
+    ///
+    /// See: [request](AuthorizedClient::request) for more info
+    pub async fn post_ignore_response<B>(&self, url: Url, body: &B) -> Result<()>
+    where
+        B: Serialize,
+    {
+        self.request(|| build_post_request(&url, body), ignore_response)
             .await
     }
 
@@ -161,16 +205,9 @@ impl AuthorizedClient {
     /// In case the bearer token gets rejected a new one is requested, this retry mechanism works 3 times, after that the client returns an error.
     ///
     /// Note: only status code  `200` returns `Ok`, the rest returns an `Err`
-    pub async fn request_json<R>(&self, request_builder: impl Fn() -> Request) -> Result<R>
-    where
-        R: for<'de> Deserialize<'de>,
-    {
-        self.request(request_builder, Response::json).await
-    }
-
-    async fn request<R, ExtractFut, ExtractError>(
+    pub async fn request<R, ExtractFut, ExtractError>(
         &self,
-        request_builder: impl Fn() -> Request,
+        request_builder: impl Fn() -> Result<Request>,
         response_builder: impl FnOnce(Response) -> ExtractFut,
     ) -> Result<R>
     where
@@ -186,7 +223,7 @@ impl AuthorizedClient {
 
         loop {
             // Build the request
-            let mut request = request_builder();
+            let mut request = request_builder()?;
 
             // Add the bearer token to the request headers
             let headers = request.headers_mut();
@@ -232,6 +269,25 @@ impl AuthorizedClient {
             }
         }
     }
+}
+
+pub fn build_post_request<B>(url: &Url, body: &B) -> Result<Request>
+where
+    B: Serialize,
+{
+    let mut request = Request::new(Method::POST, url.clone());
+    let request_body = request.body_mut();
+    *request_body = Some(
+        serde_json::to_string(&body)
+            .context("Failed to serialize body")?
+            .into(),
+    );
+
+    Ok(request)
+}
+
+async fn ignore_response(_: Response) -> Result<(), Void> {
+    Ok(())
 }
 
 #[derive(Clone)]
