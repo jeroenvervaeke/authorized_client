@@ -5,6 +5,7 @@ use oauth2::basic::BasicClient;
 use oauth2::http::StatusCode;
 use oauth2::reqwest::async_http_client;
 use oauth2::{AuthUrl, ClientId, ClientSecret, Scope, TokenResponse, TokenUrl};
+use reqwest::header::HeaderValue;
 use reqwest::{Client, Method, Request, Response};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -276,6 +277,10 @@ where
     B: Serialize,
 {
     let mut request = Request::new(Method::POST, url.clone());
+
+    let headers = request.headers_mut();
+    headers.append("Content-Type", HeaderValue::from_static("application/json"));
+
     let request_body = request.body_mut();
     *request_body = Some(
         serde_json::to_string(&body)
