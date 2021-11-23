@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["AuthorizedClient",""],["Settings",""]]});
+initSidebarItems({"struct":[["AuthorizedClient",""],["Settings",""]],"trait":[["RequestBuilder",""]]});

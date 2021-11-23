@@ -300,6 +300,19 @@
 <span id="300">300</span>
 <span id="301">301</span>
 <span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::settings::Settings</span>;
 <span class="kw">use</span> <span class="ident">anyhow</span>::{<span class="ident">bail</span>, <span class="ident">Context</span>, <span class="prelude-ty">Result</span>};
 <span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">debug</span>, <span class="ident">trace</span>};
@@ -595,6 +608,19 @@
 
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">ignore_response</span>(<span class="kw">_</span>: <span class="ident">Response</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Void</span><span class="op">&gt;</span> {
     <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RequestBuilder</span> {
+    <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">client</span>: <span class="ident">Client</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Request</span><span class="op">&gt;</span>;
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> <span class="ident">RequestBuilder</span> <span class="kw">for</span> <span class="ident">F</span>
+<span class="kw">where</span>
+    <span class="ident">F</span>: <span class="ident">Fn</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Request</span><span class="op">&gt;</span>,
+{
+    <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_client</span>: <span class="ident">Client</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Request</span><span class="op">&gt;</span> {
+        <span class="self">self</span>()
+    }
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
