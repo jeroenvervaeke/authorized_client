@@ -41,5 +41,5 @@
 mod authorized_client;
 mod settings;
 
-pub use crate::authorized_client::AuthorizedClient;
+pub use crate::authorized_client::{AuthorizedClient, RequestBuilder};
 pub use crate::settings::Settings;

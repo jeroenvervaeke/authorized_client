@@ -208,7 +208,7 @@ impl AuthorizedClient {
     /// Note: only status code  `200` returns `Ok`, the rest returns an `Err`
     pub async fn request<R, ExtractFut, ExtractError>(
         &self,
-        request_builder: impl Fn() -> Result<Request>,
+        request_builder: impl RequestBuilder,
         response_builder: impl FnOnce(Response) -> ExtractFut,
     ) -> Result<R>
     where
@@ -224,7 +224,7 @@ impl AuthorizedClient {
 
         loop {
             // Build the request
-            let mut request = request_builder()?;
+            let mut request = request_builder.build(self.http_client.clone())?;
 
             // Add the bearer token to the request headers
             let headers = request.headers_mut();
@@ -293,6 +293,19 @@ where
 
 async fn ignore_response(_: Response) -> Result<(), Void> {
     Ok(())
+}
+
+pub trait RequestBuilder {
+    fn build(&self, client: Client) -> Result<Request>;
+}
+
+impl<F> RequestBuilder for F
+where
+    F: Fn() -> Result<Request>,
+{
+    fn build(&self, _client: Client) -> Result<Request> {
+        self()
+    }
 }
 
 #[derive(Clone)]
